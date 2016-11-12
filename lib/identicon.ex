@@ -3,6 +3,11 @@ defmodule Identicon do
   Converts an input string to an identicon
   """
 
+  @doc """
+  The main entry point to the utility. `input` is of type `String.t`.
+  Saves the image to a relative directory in the form of `./images/input.png`
+  """
+  @spec main(String.t) :: String.t
   def main(input) do
     input
     |> hash_input
@@ -69,10 +74,30 @@ defmodule Identicon do
       :egd.filledRectangle(image, start, stop, fill)
     end
 
-    image = :egd.render(image)
+    :egd.render(image)
   end
 
   defp save_image(image, input) do
-    File.write("#{input}.png", image)
+    with :ok <- ensure_image_directory,
+         :ok <- write_file("images/#{input}.png", image)
+    do
+      "Image saved successfully to #{Path.absname("./")}/images/#{input}.png"
+    end
   end
+
+  defp ensure_image_directory do
+    case File.mkdir("images") do
+      :ok -> :ok
+      {:error, :eexist} -> :ok
+      {:error, reason} -> reason
+    end
+  end
+
+  defp write_file(path, image) do
+    case File.write(path, image) do
+      :ok -> :ok
+      {:error, reason} -> reason
+    end
+  end
+
 end
